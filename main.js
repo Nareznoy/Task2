@@ -16,9 +16,9 @@ var datas = [
 let numberOfPages = Math.ceil(datas.length / 5);
 let currentPage = 0;
 
-displayContent(currentPage);
+displayContent(currentPage, datas);
 
-function displayContent(currentPage) {
+function displayContent(currentPage, array) {
     let tbody = document.createElement('tbody')
 
 
@@ -48,36 +48,78 @@ function displayContent(currentPage) {
 
 
 let order = -1;
+let currentCellSort = 0;
+
 
 let tableHeaders = document.querySelectorAll('.table-header')
-for (let tableHeader of tableHeaders) {
-    tableHeader.addEventListener('click', () => {
-        order *= -1;
-        sortArray(tableHeader.classList[1])
-        displayContent(currentPage);
+for (let i = 0; i < tableHeaders.length; i++) {
+    tableHeaders[i].addEventListener('click', () => {
+        if(i != currentCellSort){
+            order = -1
+        }
+        else{
+            order *= -1;
+        }
+        // sortArray(tableHeader.innerText)
+
+        if (tableHeaders[i].innerText == 'ID') {
+            datas.sort(compareId)
+        }
+        else if (tableHeaders[i].innerText == 'Name') {
+            datas.sort(compareName)
+        }
+        else {
+            datas.sort(compareValue)
+        }
+
+
+
+        // tableHeader.childNodes[1].classList.remove('hidden')
+
+        currentCellSort = i;
+        setOrderImg();
+
+        displayContent(currentPage, datas);
     })
 }
 
+function setOrderImg() {
+    for (let i = 0; i < tableHeaders.length; i++) {
+        if (i === currentCellSort) {
+            tableHeaders[i].childNodes[1].classList.remove('hidden')
+            if (order == 1){
+                tableHeaders[i].childNodes[1].classList.add('rotate')
+            }
+            else{
+                tableHeaders[i].childNodes[1].classList.remove('rotate')
+            }
+            continue;
+        }
+        tableHeaders[i].childNodes[1].classList.add('hidden')
+    }
+
+}
+
 function compareId(a, b) {
-    if (a.id > b.id) return 1 * order;
-    if (a.id < b.id) return -1 * order;
+    if (a.id > b.id) return -1 * order;
+    if (a.id < b.id) return 1 * order;
 }
 
 function compareName(a, b) {
-    if (a.name > b.name) return 1 * order;
-    if (a.name < b.name) return -1 * order;
+    if (a.name > b.name) return -1 * order;
+    if (a.name < b.name) return 1 * order;
 }
 
 function compareValue(a, b) {
-    if (a.value > b.value) return 1 * order;
-    if (a.value < b.value) return -1 * order;
+    if (a.value > b.value) return -1 * order;
+    if (a.value < b.value) return 1 * order;
 }
 
 function sortArray(cell) {
-    if (cell == 'id') {
+    if (cell == 'ID') {
         datas.sort(compareId)
     }
-    else if (cell == 'name') {
+    else if (cell == 'Name') {
         datas.sort(compareName)
     }
     else {
@@ -86,9 +128,14 @@ function sortArray(cell) {
 }
 
 
-let filter = document.querySelector('.filter-text').value
-let filteredDatas = datas.filter((value))
+// let filter = document.querySelector('.filter-text').value
+let filteredDatas = datas.filter((value) => {
+    value.id > 5
+})
 
+document.querySelector('.filter-btn').addEventListener('click', () => {
+    displayContent(currentPage, filteredDatas)
+})
 
 let htmlLinkPages = ``
 
@@ -101,6 +148,6 @@ let pageLinks = document.querySelectorAll('.page-link');
 for (let pageLink of pageLinks) {
     pageLink.addEventListener('click', () => {
         currentPage = pageLink.textContent - 1;
-        displayContent(currentPage);
+        displayContent(currentPage, datas);
     })
 }
