@@ -13,84 +13,80 @@ var datas = [
     { id: 12, name: "Name 10", value: 10 }
 ];
 
-let numberOfPages = Math.ceil(datas.length / 5);
-let currentPage = 0;
+let table = document.querySelector(".main-table")
 
-displayContent(currentPage, datas);
+let filteredDatas = datas
+let currentPage = 0
+displayContent(currentPage, filteredDatas)
+resizebleColumns(table)
 
+// Вывод контента таблицы
 function displayContent(currentPage, array) {
     let tbody = document.createElement('tbody')
+    let numberOfPages
 
-
-    // let htmlRow = ``;
-    let start = 5 * currentPage;
-    let end;
-
-    if (currentPage === numberOfPages - 1) {
-        end = 5 * currentPage + (datas.length % 5)
+    if (array.length == 0) {
+        numberOfPages = 1
+        let oldTbody = table.querySelector('tbody')
+        table.replaceChild(tbody, oldTbody)
+        addLinkPages(numberOfPages)
+        return
     }
-    else {
+
+    numberOfPages = Math.ceil(filteredDatas.length / 5)
+    let start = 5 * currentPage
+    let end
+
+    if (array.length < 5) {
+        end = array.length
+    } else if (currentPage === numberOfPages - 1) {
+        end = 5 * currentPage + (array.length % 5)
+    } else {
         end = 5 * currentPage + 5
     }
 
     for (let i = start; i < end; i++) {
-        let row = document.createElement('tr');
+        let row = document.createElement('tr')
 
-        row.insertAdjacentHTML("afterbegin", `<td> ${datas[i].id} </td> <td> ${datas[i].name} </td> <td> ${datas[i].value} </td>`)
+        row.insertAdjacentHTML("afterbegin", `<td> ${array[i].id} </td> <td> ${array[i].name} </td> <td> ${array[i].value} </td>`)
         tbody.appendChild(row)
-        // document.querySelector(".table-block").appendChild(row);
     }
-    let table = document.querySelector(".main-table")
     let oldTbody = table.querySelector('tbody')
     table.replaceChild(tbody, oldTbody);
-
+    addLinkPages(numberOfPages)
 }
 
 
-let order = -1;
-let currentCellSort = 0;
 
-
-let tableHeaders = document.querySelectorAll('.table-header')
+// Сортировка по нажатию на столбцы
+let order = -1
+let currentCellSort = 0
+let tableHeaders = table.querySelectorAll('.table-header')
 for (let i = 0; i < tableHeaders.length; i++) {
     tableHeaders[i].addEventListener('click', () => {
-        if(i != currentCellSort){
+        if (i != currentCellSort) {
             order = -1
-        }
-        else{
-            order *= -1;
-        }
-        // sortArray(tableHeader.innerText)
-
-        if (tableHeaders[i].innerText == 'ID') {
-            datas.sort(compareId)
-        }
-        else if (tableHeaders[i].innerText == 'Name') {
-            datas.sort(compareName)
-        }
-        else {
-            datas.sort(compareValue)
+        } else {
+            order *= -1
         }
 
+        currentCellSort = i
 
-
-        // tableHeader.childNodes[1].classList.remove('hidden')
-
-        currentCellSort = i;
-        setOrderImg();
-
-        displayContent(currentPage, datas);
+        sortArray(filteredDatas, tableHeaders[i].innerText)
+        setOrderImg()
+        displayContent(currentPage, filteredDatas)
     })
 }
 
+
+// Вывод значков направления сортировки
 function setOrderImg() {
     for (let i = 0; i < tableHeaders.length; i++) {
         if (i === currentCellSort) {
             tableHeaders[i].childNodes[1].classList.remove('hidden')
-            if (order == 1){
+            if (order == 1) {
                 tableHeaders[i].childNodes[1].classList.add('rotate')
-            }
-            else{
+            } else {
                 tableHeaders[i].childNodes[1].classList.remove('rotate')
             }
             continue;
@@ -100,54 +96,61 @@ function setOrderImg() {
 
 }
 
-function compareId(a, b) {
-    if (a.id > b.id) return -1 * order;
-    if (a.id < b.id) return 1 * order;
-}
-
-function compareName(a, b) {
-    if (a.name > b.name) return -1 * order;
-    if (a.name < b.name) return 1 * order;
-}
-
-function compareValue(a, b) {
-    if (a.value > b.value) return -1 * order;
-    if (a.value < b.value) return 1 * order;
-}
-
-function sortArray(cell) {
+// Сортировка массива по столбцу
+function sortArray(inputArray, cell) {
     if (cell == 'ID') {
-        datas.sort(compareId)
+        inputArray.sort(compareId)
+    } else if (cell == 'Name') {
+        inputArray.sort(compareName)
+    } else {
+        inputArray.sort(compareValue)
     }
-    else if (cell == 'Name') {
-        datas.sort(compareName)
+
+    function compareId(a, b) {
+        if (a.id > b.id) return -1 * order
+        if (a.id < b.id) return 1 * order
     }
-    else {
-        datas.sort(compareValue)
+
+    function compareName(a, b) {
+        if (a.name > b.name) return -1 * order
+        if (a.name < b.name) return 1 * order
     }
+
+    function compareValue(a, b) {
+        if (a.value > b.value) return -1 * order
+        if (a.value < b.value) return 1 * order
+    }
+
+    return inputArray
 }
 
-
-// let filter = document.querySelector('.filter-text').value
-let filteredDatas = datas.filter((value) => {
-    value.id > 5
-})
-
+// Обработчик фильтрации данных по полю Name
 document.querySelector('.filter-btn').addEventListener('click', () => {
+    let filter = document.querySelector('.filter-text').value
+    filteredDatas = datas.filter(data => data.name.indexOf(filter) != -1)
     displayContent(currentPage, filteredDatas)
 })
 
-let htmlLinkPages = ``
 
-for (let i = 0; i < numberOfPages; i++) {
-    htmlLinkPages += `<a class="page-link">${i + 1}</a>`
-}
-document.querySelector(".table-block").insertAdjacentHTML("afterend", htmlLinkPages);
+// Вывод переключателей по страницам таблицы
+function addLinkPages(numberOfPages) {
+    let tableBlockElement = document.querySelector(".table-block")
+    document.querySelectorAll('.page-link').forEach(e => e.remove())
 
-let pageLinks = document.querySelectorAll('.page-link');
-for (let pageLink of pageLinks) {
-    pageLink.addEventListener('click', () => {
-        currentPage = pageLink.textContent - 1;
-        displayContent(currentPage, datas);
-    })
+    for (let i = 0; i < numberOfPages; i++) {
+        let linkElement = document.createElement('a')
+        linkElement.classList.add('page-link')
+        linkElement.textContent = i + 1
+
+        if (i === currentPage) {
+            linkElement.classList.add('current-page')
+        }
+
+        linkElement.addEventListener('click', () => {
+            currentPage = linkElement.textContent - 1
+            displayContent(currentPage, filteredDatas)
+        })
+
+        tableBlockElement.insertAdjacentElement('beforeend', linkElement)
+    }
 }
